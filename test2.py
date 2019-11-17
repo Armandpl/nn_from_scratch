@@ -13,7 +13,7 @@ nn = NeuralNet()
 nn.addLayer(FullyConnectedLayer(2, 3))
 nn.addLayer(FullyConnectedLayer(3, 1))
 
-nn.fit(inputs, outputs, 0.1, 2000)
+nn.fit(inputs, outputs, 0.05, 5000)
 
 while True :
     data = input("enter data:")

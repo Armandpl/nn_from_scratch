@@ -1,6 +1,7 @@
 import numpy as np
 from utils import reluDerivative
 from utils import relu
+from utils import shuffle_in_unison
 from layer import Layer
 
 class NeuralNet:
@@ -24,40 +25,99 @@ class NeuralNet:
     def addLayer(self, layer):
         self.layers.append(layer)
 
-    def fit(self, inputs, outputs, lr, epochs):
+    def fit(self, inputs, outputs, lr, epochs, batch_size = None, inputs_test = None, outputs_test = None):
         for i in range(epochs):
-            print("Epoch: ",i)
-            final_grad_w = []
-            final_grad_b = []
+            print("Epoch: ",i+1,"/",epochs)
+            inputs_shuffled = inputs
+            outputs_shuffled = outputs
             mse = None
 
-            ## compute the gradient for the inputs
-            for j in range(len(inputs)):
-                back = self.backprop(inputs[j], outputs[j])
+            # mini batch shuffle
+            if batch_size == None:
+                batch_nb = 1
+            else:
+                batch_nb = len(inputs)//batch_size
+                ## shuffle in unison let us shuffle inputs and outputs in the same way
+                ## this way outputs[0] still correspond to inputs[0] after shuffling
+                shuffle_in_unison(inputs_shuffled, outputs_shuffled)
 
-                if j == 0:
-                    final_grad_w = back[0]
-                    final_grad_b = back[1]
-                    mse = back[2]
+            for b in range(batch_nb): # for each mini batch
+                ## compute the gradient for the inputs
+                final_grad_w = []
+                final_grad_b = []
+
+                ##
+                if batch_size == None:
+                    R = len(inputs_shuffled)
                 else:
+                    R = batch_size
 
-                    for k in range(len(final_grad_w)):
-                        # we average the nudges
-                        final_grad_w[k] = np.true_divide(np.add(final_grad_w[k], back[0][k]), 2)
-                        final_grad_b[k] = np.true_divide(np.add(final_grad_b[k], back[1][k]), 2)
+                for j in range(R): ## for each input in the batch
+                    ## we compute the gradient and do gradient descent
 
-                        mse = (mse+back[2])/2
+                    if batch_size == None:
+                        idx = j
+                    else:
+                        idx = j+b*batch_size
+                    # batch 0 : idx [0, batch_size]
+                    # batch 1 : idx [batch_size, batch_size+batch_size]
+                    # batch 2 : idx [batch_size*2, batch_size*3]
+                    # ...
 
-            ## gradient descent
-            for l in range(len(self.layers)):
-                # for each layer we nudge the weights and biases
-                self.layers[l].W = np.subtract (self.layers[l].W, np.transpose(final_grad_w[l])*lr)
-                self.layers[l].bias = np.subtract ( self.layers[l].bias, final_grad_b[l]*lr)
+                    back = self.backprop(inputs_shuffled[idx], outputs_shuffled[idx])
+
+                    # if it is the first input of the batch we can't average the gradient yet
+                    if j == 0:
+                        final_grad_w = back[0]
+                        final_grad_b = back[1]
+                        mse = back[2]
+                    else:
+
+                        for k in range(len(final_grad_w)):
+                            # we average the nudges
+                            final_grad_w[k] = np.true_divide(np.add(final_grad_w[k], back[0][k]), 2)
+                            final_grad_b[k] = np.true_divide(np.add(final_grad_b[k], back[1][k]), 2)
+
+                            mse = (mse+back[2])/2
+
+                ## gradient descent
+                for l in range(len(self.layers)):
+                    # for each layer we nudge the weights and biases
+                    self.layers[l].W = np.subtract (self.layers[l].W, np.transpose(final_grad_w[l])*lr)
+                    self.layers[l].bias = np.subtract ( self.layers[l].bias, final_grad_b[l]*lr)
 
             print("MSE:",mse)
 
+            print("current weight per layer")
+            for u in range(len(self.layers)):
+                print("layer ",u)
+                print(self.layers[u].W)
+
+            # if a test set is provided we compute some metrics
+            if inputs_test is None:
+                print("no test set")
+            else:
+                correct_answers = 0
+                for t in range(len(inputs_test)):
+                    fwd = self.forward(inputs_test[t])
+                    y_pred = fwd[0]
+                    y_true = outputs_test[t]
+
+                    #y_pred[y_pred >= 0.5] = 1
+                    #y_pred[y_pred < 0.5] = 0
+
+                    #if np.array_equal(y_pred, y_true):
+                    #    correct_answers += 1
+                    if np.argmax(y_pred) == np.argmax(y_true):
+                        correct_answers += 1
+
+                accuracy = (correct_answers/len(inputs_test))*100
+
+                print("correct answers: ",correct_answers,"/",len(inputs_test))
+                print("Accuracy: ",accuracy,"%")
+            print("")
+
     # return full gradient for one input
-    # add mse ??
     def backprop(self, input_, target):
         w_grad = []
         b_grad = []
@@ -66,7 +126,7 @@ class NeuralNet:
         out = self.forward(input_)
         y_pred = out[0]
         Z = out[1]
-        squared_error = np.power ( np.subtract( y_pred, target ), 2)
+        squared_error = np.mean ( np.power ( np.subtract( y_pred, target ), 2) )
 
         # hardcoded error + activation
         # don't forget it's a Hadamard product
@@ -88,7 +148,7 @@ class NeuralNet:
 
             # compute the current error
             WT = np.transpose(self.layers[i].W)
-            curr_err  = np.multiply( WT.dot(curr_err), relu(Z[i-1]) )
+            curr_err  = np.multiply( WT.dot( curr_err ), relu(previous_z) )
 
         # element in the grad list were added backward, let's reverse them
         w_grad.reverse()
