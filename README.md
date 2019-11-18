@@ -1,16 +1,14 @@
-# Neural Net from scratch (work in progress)
+# Neural Net from scratch
 
-This is my first atempt at implementing a neural net from scratch, without looking at any code. Or at least without copy/pasting code.
+This is my first atempt at implementing a neural net from scratch, without looking at any code.
 
-## usefull ressources:
-http://neuralnetworksanddeeplearning.com/chap2.html
+## Usefull ressources:
+(http://neuralnetworksanddeeplearning.com/chap2.html)
 
 ## Todo
-* multiples loss functions
-* multiple activation functions
-* multiple layer types
-* multiple metrics
-
-## ?????
-Pourquoi quand ça diverge mse = 0.1 ?
-pourquoi sur le test set ça donne le nombre de bonne reponses est toujours le meme
+* finish implementing multiple activation functions
+* implement one cycle policy
+* implement multiples loss functions
+* implement multiple layer types
+* implement multiple metrics
+* numpy exp overflow ?

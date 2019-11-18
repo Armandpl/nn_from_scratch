@@ -1,6 +1,7 @@
 import numpy as np
 from utils import reluDerivative
 from utils import relu
+from utils import sigmoid_derivative
 from utils import shuffle_in_unison
 from layer import Layer
 
@@ -27,7 +28,7 @@ class NeuralNet:
 
     def fit(self, inputs, outputs, lr, epochs, batch_size = None, inputs_test = None, outputs_test = None):
         for i in range(epochs):
-            print("Epoch: ",i+1,"/",epochs)
+            print("epoch: ",i+1,"/",epochs)
             inputs_shuffled = inputs
             outputs_shuffled = outputs
             mse = None
@@ -88,14 +89,14 @@ class NeuralNet:
 
             print("MSE:",mse)
 
-            print("current weight per layer")
-            for u in range(len(self.layers)):
-                print("layer ",u)
-                print(self.layers[u].W)
+            # print("current weight per layer")
+            # for u in range(len(self.layers)):
+            #     print("layer ",u)
+            #     print(self.layers[u].W)
 
             # if a test set is provided we compute some metrics
             if inputs_test is None:
-                print("no test set")
+                print('') # todo: alternative to print newlines
             else:
                 correct_answers = 0
                 for t in range(len(inputs_test)):
@@ -131,16 +132,19 @@ class NeuralNet:
         # hardcoded error + activation
         # don't forget it's a Hadamard product
         # we start w/ the output error
-        curr_err = np.multiply( np.subtract( y_pred, target ), reluDerivative(Z[len(Z)-1]))
+
+        # todo : get the right derivative from layer properties
+
+        curr_err = np.multiply( np.subtract( y_pred, target ), sigmoid_derivative(Z[-1]))
 
         for i in reversed(range(len(self.layers))):
 
             if i == 0:
-                previous_z = input_
+                previous_a = input_
             else:
-                previous_z = Z[i-1]
+                previous_a = self.layers[i-1].activation(Z[i-1])
 
-            backprop_res=self.layers[i].backprop(curr_err, previous_z)
+            backprop_res=self.layers[i].backprop(curr_err, previous_a)
 
             #we append the gradient of this layer to our gradient matrix
             w_grad.append(backprop_res)
@@ -148,7 +152,7 @@ class NeuralNet:
 
             # compute the current error
             WT = np.transpose(self.layers[i].W)
-            curr_err  = np.multiply( WT.dot( curr_err ), relu(previous_z) )
+            curr_err  = np.multiply( WT.dot( curr_err ), previous_a )
 
         # element in the grad list were added backward, let's reverse them
         w_grad.reverse()
