@@ -20,8 +20,10 @@ print("Loading test set")
 load_mnist("mnist_png/testing/", i_test, o_test)
 
 nn = NeuralNet()
-nn.addLayer(FullyConnectedLayer(784, 16, activation=sigmoid))
-nn.addLayer(FullyConnectedLayer(16, 16, activation=sigmoid))
-nn.addLayer(FullyConnectedLayer(16, 10, activation=sigmoid))
+nn.addLayer(FullyConnectedLayer(784, 16, activation=relu))
+nn.addLayer(FullyConnectedLayer(16, 16, activation=relu))
+nn.addLayer(FullyConnectedLayer(16, 10, activation=relu))
 
-nn.fit(inputs, outputs, 20, 30, batch_size=512, inputs_test=i_test, outputs_test=o_test)
+#no 1_cycle, 0.01, >10 epochs ?
+
+nn.fit(inputs, outputs, 0.05, 20, batch_size=256, inputs_test=i_test, outputs_test=o_test)

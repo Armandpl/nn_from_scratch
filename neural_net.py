@@ -4,6 +4,7 @@ from utils import relu
 from utils import sigmoid_derivative
 from utils import shuffle_in_unison
 from layer import Layer
+import progressbar
 
 class NeuralNet:
 
@@ -26,7 +27,12 @@ class NeuralNet:
     def addLayer(self, layer):
         self.layers.append(layer)
 
-    def fit(self, inputs, outputs, lr, epochs, batch_size = None, inputs_test = None, outputs_test = None):
+    def fit(self, inputs, outputs, max_lr, epochs, batch_size = None, inputs_test = None, outputs_test = None):
+        lowest_lr = max_lr/5
+        lr = lowest_lr
+        increment = (max_lr-lowest_lr)/epochs/2
+        # lr = max_lr
+
         for i in range(epochs):
             print("epoch: ",i+1,"/",epochs)
             inputs_shuffled = inputs
@@ -42,7 +48,13 @@ class NeuralNet:
                 ## this way outputs[0] still correspond to inputs[0] after shuffling
                 shuffle_in_unison(inputs_shuffled, outputs_shuffled)
 
-            for b in range(batch_nb): # for each mini batch
+            if i < epochs/2:
+                lr += increment
+            else:
+                lr -= increment
+
+            for b in progressbar.progressbar(range(batch_nb)): # for each mini batch
+
                 ## compute the gradient for the inputs
                 final_grad_w = []
                 final_grad_b = []
@@ -87,12 +99,12 @@ class NeuralNet:
                     self.layers[l].W = np.subtract (self.layers[l].W, np.transpose(final_grad_w[l])*lr)
                     self.layers[l].bias = np.subtract ( self.layers[l].bias, final_grad_b[l]*lr)
 
-            print("MSE:",mse)
+            print("current weight per layer")
+            for u in range(len(self.layers)):
+                print("layer ",u)
+                print(self.layers[u].W)
 
-            # print("current weight per layer")
-            # for u in range(len(self.layers)):
-            #     print("layer ",u)
-            #     print(self.layers[u].W)
+            print("MSE:", mse)
 
             # if a test set is provided we compute some metrics
             if inputs_test is None:
@@ -135,7 +147,7 @@ class NeuralNet:
 
         # todo : get the right derivative from layer properties
 
-        curr_err = np.multiply( np.subtract( y_pred, target ), sigmoid_derivative(Z[-1]))
+        curr_err = np.multiply( np.subtract( y_pred, target ), reluDerivative(Z[-1]))
 
         for i in reversed(range(len(self.layers))):
 

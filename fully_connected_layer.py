@@ -9,9 +9,11 @@ class FullyConnectedLayer(Layer):
         self.output_size = output_size
         self.activation = activation
 
-        # we initalize the weights and bias at random
-        self.bias = np.random.random((self.output_size, 1))
-        self.W = np.random.random((self.output_size, self.input_size))
+        # we initalize the weights at random and set the biases to be zeros
+        self.bias = np.zeros((self.output_size, 1))
+
+        # HE init : optimized for relu activation
+        self.W = np.random.randn(self.output_size, self.input_size) * np.sqrt(2/self.input_size)
 
     # we also need to keep trace of the value before activation
     # to compute the gradient later
