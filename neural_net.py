@@ -1,4 +1,4 @@
-import numpy as np
+import cupy as np
 from utils import reluDerivative
 from utils import relu
 from utils import sigmoid_derivative

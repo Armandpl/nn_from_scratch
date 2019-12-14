@@ -1,4 +1,4 @@
-import numpy as np
+import cupy as np
 import matplotlib.image as mpimg
 import os
 
