@@ -1,3 +1,4 @@
+import numpy as npp
 import cupy as np
 import matplotlib.image as mpimg
 import os
@@ -35,7 +36,7 @@ def load_mnist(directory_, inputs, outputs):
                 inputs.append(np.reshape(img, (784, 1)))
                 out = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
                 out[i] = 1
-                outputs.append(np.transpose(np.matrix(out)))
+                outputs.append(np.transpose(npp.matrix(out)))
                 continue
             else:
                 continue
