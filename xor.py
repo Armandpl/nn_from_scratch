@@ -1,4 +1,4 @@
-import cupy as np
+import numpy as np
 from utils import relu
 from neural_net import NeuralNet
 from fully_connected_layer import FullyConnectedLayer
